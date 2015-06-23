@@ -10,9 +10,26 @@ var db = mongo('ecommerce', ['products']);
 app.use(bodyParser.json());
 app.use(cors());
 
+app.listen(8888, function(){
+	console.log('Listening.....');
+});
+
 app.route('/api/products')
 	.get(function(req, res){
-		db.productsfind()
+		var query = {};
+		if(req.query.id) {
+			query._id = mongo.ObjectId(req.query.id);
+		}
+		if(req.query.title) {
+			query.title = req.query.title;
+		}
+		db.products.find(query, function(err, response){
+			if(err){
+				res.status(500).json(err);
+			} else {
+				res.json(response);
+			}
+		});
 	})
 
 	.post(function(req, res) {
@@ -28,23 +45,42 @@ app.route('/api/products')
 
 	.put(function(req, res){
 		if(!req.query.id){
-			res.status(500).send('you need to send an id');
-		} else {
-			db.products.update( function(err, response){
+			 return res.status(500).send('you need to send an id');
+		} 
+		var query = {
+			_id: mongo.ObjectId(req.query.id)
+		};
+			db.products.update(query, req.body, function(err, response){
 				if(err){
 					res.status(500).json(err);
 				} else {
 					res.json(response);
 				}
-			})
-		}
-		res.send('DELETED')
+			});
+		res.send('PUTTED');
 	})
 
 	.delete(function(req, res){
-		db.products.remove()
-	})
+		if(!req.query.id){
+			res.status(500).send('what is the id?');
+		} else {
+		db.products.remove({
+				_id: mongo.ObjectId(req.query.id)
+			} , function(err, response){
+				if(err){
+					res.status(500).json(err);
+				} else {
+					res.json(response);
+				}
+			});
+		}
+		res.send('DELETED');
+	});
 
-app.listen(8888, function(){
-	console.log('Listening.....');
-});
+
+
+
+
+
+
+
